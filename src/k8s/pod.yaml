@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: helloworld-app
+  labels:
+    app: helloworld-backend
+spec:
+  containers:
+    - image: YOUR-HANDLE/hello-world-go:1.0.0
+      name: helloworld-container
+      ports:
+        - containerPort: 7070
+          name: http
+          protocol: TCP

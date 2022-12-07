@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment
+  labels:
+    app: helloworld-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: helloworld-backend
+  template:
+    metadata:
+      labels:
+        app: helloworld-backend
+    spec:
+      containers:
+      - image: YOUR-HANDLE/hello-world-go:1.0.0
+        name: helloworld-container
+        ports:
+          - containerPort: 7070
+            name: http
+            protocol: TCP

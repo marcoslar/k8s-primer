@@ -1,0 +1,226 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/dist/reveal.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="stylesheet" href="/static/hl/default.min.css">
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section data-markdown>
+          <textarea data-template>
+            <h1 class="huge" style="color:white">K8s Primer
+            </h1>
+            <div><img class="image" width="300" height="300" src="/static/img/k8s-logo.svg"></div>
+            <div style="text-align:center;padding-top:1.5rem;">Nov 25, 2022</div>
+
+            ---
+            # Why K8s?
+            - Your are building solutions based on containers at scale
+            - You want autoscaling, zero-downtime rolling upgrades and rollbacks, service discovery, load balancing...
+              standardized and for free
+            - You want to have fun writing YAML <img width="70" height="70" src="/static/img/facepalm.png">
+
+            ---
+            # Let's run this on K8s
+
+            `./main.go`
+            ```
+package main
+
+import (
+    ...
+)
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	id := rand.Int()
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Fprintf(w, "Hello world (ID: %d)\n", id)
+	})
+
+	fmt.Printf("Serving on http://localhost:7070 (ID: %d)\n", id)
+	log.Fatal(http.ListenAndServe(":7070", nil))
+}
+            ```
+
+            - <span class="small">Run it: </span>&nbsp; `go run main.go`
+            - <span class="small">Call it: </span>&nbsp; `curl localhost:7070`
+            ---
+            # Whe need a machine where to run K8s and our service
+
+            We need a K8s cluster. A K8s cluster is a set of nodes (physical or virtual).
+            Some nodes are special.
+
+            <div><img class="image" style="border: 30px solid white" src="/static/img/cluster1.png"></div>
+            ---
+
+            # Our service packaged as a container
+
+            `./Dockerfile`
+            ```
+            FROM golang:1.19-alpine3.15 as build
+            WORKDIR /app
+            COPY main.go ./
+            RUN go build -o /app/HelloWorld main.go
+            EXPOSE 7070
+            
+            FROM alpine:3.15
+            USER nobody:nobody
+            COPY --from=build /app/HelloWorld /HelloWorld
+            CMD ["/HelloWorld"]
+            ```
+                   
+            | | |
+            | ---: | :--- |
+            | <span class="small padr">Build and tag the image:</span> | `docker build -t YOUR-HANDLE/hello-world-go:1.0.0 .` |
+            | <span class="small padr">Login into the registry:</span> | `docker login -u YOUR-HANDLE` |
+            | <span class="small padr">Push image to registry:</span> | `docker push YOUR-HANDLE/hello-world-go:1.0.0` |
+
+            ---
+            # Docker Hub as container registry
+            <div><img class="image" style="border: 30px solid white" src="/static/img/registry1.png"></div>
+            ---
+            # K8s Pod
+            <div><img class="image" width="175" height="175"  src="/static/img/app-container-pod-2.svg"></div>
+
+            `./k8s/pod.yaml`
+
+            ```
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: helloworld-app
+              labels:
+                app: helloworld-backend
+            spec:
+              containers:
+                - image: YOUR-HANDLE/hello-world-go:1.0.0
+                  name: helloworld-container
+                  ports:
+                    - containerPort: 7070
+                      name: http
+                      protocol: TCP
+            ```
+            <small>Deploy it: `kubectl apply -f pod.yaml`</small>
+            ---
+            # Let's deploy 2 Pods (wrong way)
+
+            ```
+            $ git diff --no-index k8s/pod.yaml k8s/pod2.yaml
+            diff --git a/pod.yaml b/pod2.yaml
+            index d04ad55..9e15e0a 100644
+            --- a/pod.yaml
+            +++ b/pod2.yaml
+            @@ -1,7 +1,7 @@
+             apiVersion: v1
+             kind: Pod
+             metadata:
+            -  name: helloworld-app
+            +  name: helloworld-app2
+               labels:
+                 app: helloworld-backend
+             spec:
+            ```
+            ---
+            # K8s Deployment
+
+            ```
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: helloworld-deployment
+              labels:
+                app: helloworld-backend
+            spec:
+              replicas: 3
+              selector:
+                matchLabels:
+                  app: helloworld-backend
+              template:
+                metadata:
+                  labels:
+                    app: helloworld-backend
+                spec:
+                  containers:
+                  - image: YOUR-HANDLE/hello-world-go:1.0.0
+                    name: helloworld-container
+                    ports:
+                    - containerPort: 7070
+                      name: http
+                      protocol: TCP
+            ```
+            ---
+            # K8s Deployment
+            <div><img class="image" width="500" height="500"  src="/static/img/deployment2.svg"></div>
+            ---
+            # K8s Service
+
+            ```
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: helloworld-service
+              spec:
+                selector:
+                  app: helloworld-backend
+                ports:
+                  - port: 7070
+              ```
+
+              <div><img class="image" width="500" height="500"  src="/static/img/service1.png"></div>
+
+              <small style="color:white">blog.cloudflare.com/moving-k8s-communication-to-grpc/</small>
+            ---
+            # K8s Ingress
+
+            ```
+            apiVersion: networking.k8s.io/v1
+            kind: Ingress
+            metadata:
+              name: helloworld-ingress
+            spec:
+              ingressClassName: nginx
+              rules:
+              - host: helloworld.test
+                http:
+                  paths:
+                  - path: /crash
+                    pathType: Prefix
+                    backend:
+                      service:
+                       name: helloworld-service
+                       port:
+                       &nbsp;number: 6060
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                       name: helloworld-service
+                       port:
+                       &nbsp;number: 7070
+            ```
+            ---
+            # And more...
+            - ConfigMaps
+            - Secrets
+            - Service Accounts
+            - ...
+          </textarea>
+        </section>
+      </div>
+    </div>
+    <script src="/static/dist/reveal.js"></script>
+    <script src="/static/plugin/markdown/markdown.js"></script>
+    <script>
+      Reveal.initialize({
+        disableLayout: true,
+        plugins: [RevealMarkdown],
+      });
+    </script>
+    <script src="/static/hl/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+  </body>
+</html>

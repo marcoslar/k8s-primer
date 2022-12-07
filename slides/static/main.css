@@ -1,0 +1,107 @@
+:root {
+  --r-background-color: black;
+  --r-main-font-size: 2rem;
+  --r-main-color: white;
+  /**--r-block-margin: 1rem;**/
+  --r-heading-margin: 3rem;
+  --r-heading-font: #{$headingFont};
+  --r-heading-color: #{$headingColor};
+  --r-heading-line-height: #{$headingLineHeight};
+  --r-heading-letter-spacing: #{$headingLetterSpacing};
+  --r-heading-text-transform: #{$headingTextTransform};
+  --r-heading-text-shadow: #{$headingTextShadow};
+  --r-heading-font-weight: #{$headingFontWeight};
+  --r-heading1-text-shadow: #{$heading1TextShadow};
+  --r-heading1-size: 4rem;
+  --r-heading2-size: 2.25rem;
+  --r-heading3-size: #{$heading3Size};
+  --r-heading4-size: #{$heading4Size};
+  --r-code-font: #{$codeFont};
+  --r-link-color: skyblue;
+  --r-link-color-dark: #{darken($linkColor , 15% )};
+  --r-link-color-hover: #{$linkColorHover};
+  --r-selection-background-color: #{$selectionBackgroundColor};
+  --r-selection-color: red;
+}
+/** Reset defaults end **/
+
+body, table {
+  font-size: 2.5rem;
+}
+
+.reveal-viewport {
+  padding: 0 6rem;
+  
+  background-color: black;
+  color: white;
+  line-height: 1.25;
+}
+
+.reveal h1 {
+  font-weight: bolder;
+  font-size: 3rem;
+  margin-top: 2rem !important;
+  color: #b3f5ce;
+}
+
+.reveal a {
+  text-decoration: underline
+}
+
+
+.reveal .slides {
+  text-align: left;
+}
+
+/** Custom **/
+
+.image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h1.huge {
+  font-size: 12rem !important;
+  text-align: center !important;
+  margin-top: 10rem !important;
+  line-height: 1.15 !important;
+  margin-bottom: 1rem;
+}
+
+.small {
+  font-size: 2rem;
+}
+
+.padr {
+  padding-right: 2rem;
+}
+
+.high {
+  color: #5a83ff;
+  font-weight: bolder;
+}
+
+img {
+  vertical-align: bottom;
+}
+
+code {
+  font-size: 1.5rem;
+}
+
+pre {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+pre code {
+  font-size: 1.125rem;
+  display: flex; 
+  justify-content: center;
+}
+
+/** end custom **/
